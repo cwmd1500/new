@@ -1,6 +1,7 @@
 document.getElementById("path").onclick = function () {
     //add console.log (your github username)
     // e.g., console.log("wongaugustine");
+    console.log("wongaugustine");
 };
 
 document.getElementById("r0c0").onclick = function () {
