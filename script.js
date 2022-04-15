@@ -1,83 +1,283 @@
-let w1 = "About the Professor\r\nAbout the course\r\nInstallation of a FTP client and accessing the DCA server";
+// Images and Warning Messages
+const personImage = '<img id="person" src="person.jpg">';
+const monkeyImage = '<img id="monkey" src="monkey.jpg">';
+const leftBoatImage = '<img class="boat" src="leftBoat.jpg">';
+const rightBoatImage = '<img class="boat" src="rightBoat.jpg">';
+const boatMsg = 'Must board the boat before crossing';
+const leftMsg = 'Left Side: More monkey than People';
+const rightMsg = 'Right Side: More monkey than People';
+let crossing = false;
 
-let w2="Basic developer tools setup, e.g. code editor\r\nWeb Caching\r\nCommon desktop applications such as Mac Finder\r\nMail account setup in various apps/devices: desktop, phone, etc";
+// Variables indicating body's locations; left or right side
+let personPosition = ["", "left", "left", "left"];
+let monkeyPosition = ["", "left", "left", "left"];
+let boatSide = "left";
 
-let w3="Browser tools: console, debugging, etc (Chrome)\r\nCommon best practices: organization of root folder vs working folder, naming\r\nconventions, routine backup/restore, etc";
+// Variable for the count; no. of steps, no. of body on the each side and on the boat
+let steps=1;
 
-let w4="Source version control system and best practices\r\nSource repository and access, e.g. git and github";
-
-let w5="Internet and service providers, eg. TLD, Domain Names and Sub-domains\r\n- ISP, HSP\r\n- IP addresses";
-
-let w6="Common protocols used in web technologies (SFTP, HTTP, HTTPS)\r\nMail and it's protocols (SMTP, IMAP)";
-
-let w7="Web site development and move to production processes\r\nBasic site administrations";
-
-let w8="Media file formats and when to use them\r\nCODECS\r\nCompression considerations\r\nImage compression using tinypng.com";
-
-let w9="Markup and stylesheet languages (HTML & CSS)\r\nScripting languages (JavaScript)\r\nProgramming languages";
-
-let w10="Intro to Libraries (e.g. jQuery) and frameworks (React, Vue.js), JavaScript\r\nHTML, CSS and Javascript FW+tools";
-
-let w11="Collaboration Workflow  (e.g. Proposal phase)\r\nCollaboration Technologies (e.g. Google Doc)";
-
-let w12="File exchange formats (e.g. XML, JSON)\r\nWeb APIs\r\nWeb services (e.g. MapQuest)";
-
-let w13="Final term test\r\nAnswer True/false MC and/or fill-in-bank questions";
-
-document.getElementById("path").onclick = function () {
-    //insert console.log(your dca username);
-    //e.g., console.log("augustw4");
+let boat = {
+    count:0,
+    monkey:0,
+    person:0
+}
+let left = {
+    monkey:0,
+    person:0
+}
+let right = {
+    monkey:0,
+    person:0
 }
 
-document.getElementById("r0c0").onclick = function () {
-   alert(w1);
+// Putting a body on the boat
+function clickFunction (o,r,id,current) {
+
+    if (document.getElementById(id).style.backgroundColor === "yellow") {
+        document.getElementById(id).style.backgroundColor = "ghostwhite";
+        boat.count = boat.count - 1;         
+        
+        if (o === "person") {
+            boat.person = boat.person - 1;   
+            personPosition[r] = boatSide;  
+        } else {
+            boat.monkey = boat.monkey - 1;
+            monkeyPosition[r] = boatSide;  
+        }          
+
+    } else if (boat.count ===2 ) alert('Boat can hold no more than 2 bodies');
+    else {
+        document.getElementById(id).style.backgroundColor = "yellow";            
+        boat.count = boat.count + 1;
+        boat[o] = boat[o] + 1;
+        if (o === "person") {
+            //boat.person = boat.person + 1;
+            if (boatSide === "left") personPosition[r] = "left to right" 
+            else personPosition[r] = "right to left"
+        } else {
+            //boat.monkey = boat.monkey + 1;
+            if (boatSide === "left") monkeyPosition[r] = "left to right" 
+            else monkeyPosition[r] = "right to left"
+        }
+
+    }
 }
 
-document.getElementById("r0c1").onclick = function () {
-   alert(w2);
+// Respond when user select or deselect a body to put on the boat
+function setClick (o, r,id, current) {
+    let reponse; // boolean variable
+
+    response = (boatSide === current) &&  ( (o==="person" && personPosition[r] === current) ||(o==="monkey" && monkeyPosition[r] === current) )
+
+     if (!response) {
+        document.getElementById(id).style.backgroundColor = "ghostwhite";
+        document.getElementById(id).onclick = function () {};
+    } else {        
+        document.getElementById(id).onclick = function () {
+            clickFunction(o,r,id,current);
+        }
+    } 
 }
 
-document.getElementById("r0c2").onclick = function () {
-   alert(w3);
+// Display the game panel
+function panel(r,o, current, action){   
+    let image,id;
+
+    if (action === "leave") {
+        image = "";
+    }
+    else {
+      (o === "person") ? image = personImage : image = monkeyImage;
+    }
+   
+    if (current==="left" && o === "person") id = "r" + r + "c1";
+    else if (current==="left" && o === "monkey") id = "r" + r + "c2";
+    else if (current==="right" && o === "person") id = "r" + r + "c3";
+    else if (current==="right" && o === "monkey") id = "r" + r + "c4";
+
+    if (action !== "stay") {
+        document.getElementById(id).innerHTML = image;
+        document.getElementById(id).style.color = "black";  
+    }
+
+    setClick(o, r, id, current);
 }
 
-document.getElementById("r0c3").onclick = function () {
-   alert(w4);
+// Setup the initial game panel with body positions
+function initialize () {
+
+    for (r=1; r<= 3; r++) {
+       panel(r,'person','left', 'init'); 
+       panel(r,'monkey','left', 'init'); 
+         }
+    left.monkey = 3;
+    left.person = 3;
 }
 
-document.getElementById("r0c4").onclick = function () {
-   alert(w5);
+// Check the rules and displayy warning messages
+function checkRule () {
+    let monkeyTot, personTot;
+    let rule;    
+    let leftMonkey, leftPerson, rightMonkey, rightPerson;
+    let leftRule, rightRule;
+
+    if (boatSide === "left") {
+        leftMonkey = left.monkey - boat.monkey;
+        leftPerson = left.person - boat.person;
+        rightMonkey = right.monkey + boat.monkey;
+        rightPerson = right.person + boat.person;
+    } else {
+        rightMonkey = right.monkey - boat.monkey;
+        rightPerson = right.person - boat.person;
+        leftMonkey = left.monkey + boat.monkey;
+        leftPerson = left.person + boat.person;
+    }
+    leftRule = (leftPerson === 0) || ((leftMonkey <= leftPerson));
+    rightRule = (rightPerson === 0) || ((rightMonkey <= rightPerson));
+    if (!leftRule) return(leftMsg);
+    else if (!rightRule) return(rightMsg);
+    else return("");
 }
 
-document.getElementById("r1c0").onclick = function () {
-   alert(w6);
+// Switch the boat position; left or right
+function switchSide() {
+    if (boatSide === "left") {      
+        document.getElementById("go").innerHTML = "&laquo;&laquo;&laquo; Return....." + rightBoatImage;
+        boatSide = "right";
+    } else {
+        document.getElementById("go").innerHTML = leftBoatImage + ".....Cross &raquo;&raquo;&raquo;"
+        boatSide = "left";
+    }
 }
 
-document.getElementById("r1c1").onclick = function () {
-   alert(w7);
+// Boarding and paddle the boat to the other side
+function boarding () {
+    let nextStep;
+    function crossRiver () {
+        let toSide;    
+        ++steps;
+ 
+        toSide = boatSide;
+        switchSide();
+    
+        for (r=1; r <=3; r++) {
+            
+            if ((personPosition[r] === "left to right") || (personPosition[r] === "right to left")) {
+                personPosition[r] = boatSide;
+                panel(r,"person",boatSide, "arrive");
+                panel(r,"person",toSide, "leave");
+            } else {
+                panel(r,"person",boatSide, "stay");
+                panel(r,"person",toSide, "stay");
+            }
+            
+            if ((monkeyPosition[r] === "left to right") || (monkeyPosition[r] === "right to left")) {
+                monkeyPosition[r] = boatSide;
+                panel(r,"monkey",boatSide, "arrive");
+                panel(r,"monkey",toSide, "leave");
+            } else {
+                panel(r,"monkey",boatSide, "stay");
+                panel(r,"monkey",toSide, "stay");
+            }
+        }
+    }
+
+    let errorMsg;
+
+    if (boat.count === 0) errorMsg = boatMsg;
+    else errorMsg = checkRule();
+
+    nextStep = steps + 1;
+    if (errorMsg !== "") {
+        alert(errorMsg);
+    } else {
+        //alert("step="+steps)Step 1: Click here to board
+        document.getElementById("button").innerHTML = "Step " + nextStep + ": Click here to board the boat";
+        crossing = false;
+        if (boatSide === "left"){
+            left.monkey -= boat.monkey;
+            left.person -= boat.person;
+            right.monkey += boat.monkey;
+            right.person += boat.person
+        } else {
+            right.monkey -= boat.monkey;
+            right.person -= boat.person;
+            left.monkey += boat.monkey;
+            left.person += boat.person
+        }
+
+        boat.count = 0;
+        boat.monkey = 0;
+        boat.person = 0;
+        crossRiver();     
+    }
 }
 
-document.getElementById("r1c2").onclick = function () {
-   alert(w8);
-}
+// Setup the game and user events
+initialize();
+document.getElementById("go").addEventListener("click", boarding);
 
-document.getElementById("r1c3").onclick = function () {
-   alert(w9);
-}
+//To illustrate the correct steps
+document.getElementById("button").onclick = function (){
+if (crossing) return;
+    
+    document.getElementById("button").innerHTML = "Step " + steps + ": Click the boat (below) to cross river";
+    crossing = true;
+    switch (steps){
+        case 1:                        
+            clickFunction("person", 1,"r1c1", "left"); 
+            clickFunction("monkey", 1,"r1c2", "left");
+            //document.getElementById("button").innerHTML = "Steps: "+ steps;
+            //document.getElementById("button").innerHTML = "Pick....";
+            break;
+        case 2:            
+            clickFunction("person", 1,"r1c3", "right");
+            //document.getElementById("button").innerHTML = "Steps: "+ steps;             
+        break;  
+        case 3:
+            clickFunction("monkey", 2,"r2c2", "left"); 
+            clickFunction("monkey", 3,"r3c2", "left");
+            //document.getElementById("button").innerHTML = "Steps: "+ steps;            
+        break;
+        case 4:
+            clickFunction("monkey", 3,"r3c4", "right");
+            //document.getElementById("button").innerHTML = "Steps: "+ steps;             
+        break;
+        case 5:
+            clickFunction("person", 1,"r1c1", "left"); 
+            clickFunction("person", 2,"r2c1", "left");
+            //document.getElementById("button").innerHTML = "Steps: "+ steps;            
+        break;
+        case 6:
+            clickFunction("person", 2,"r2c3", "right"); 
+            clickFunction("monkey", 2,"r2c4", "right"); 
+            //document.getElementById("button").innerHTML = "Steps: "+ steps;                         
+        break;
+        case 7:
+            clickFunction("person", 2,"r2c1", "left"); 
+            clickFunction("person", 3,"r3c1", "left"); 
+            //document.getElementById("button").innerHTML = "Steps: "+ steps;               
+        break;
+        case 8:
+            clickFunction("monkey", 1,"r1c4", "right"); 
+            //document.getElementById("button").innerHTML = "Steps: "+ steps; 
+        break;
+        case 9:
+            clickFunction("monkey", 1,"r1c2", "left"); 
+            clickFunction("monkey", 2,"r2c2", "left");
+            //document.getElementById("button").innerHTML = "Steps: "+ steps;                
+        break;
+        case 10:
+            clickFunction("monkey", 2,"r2c4", "right");
+            //document.getElementById("button").innerHTML = "Steps: "+ steps;  
+        break;
+        case 11:
+            clickFunction("monkey", 2,"r2c2", "left"); 
+            clickFunction("monkey", 3,"r3c2", "left"); 
+            //document.getElementById("button").innerHTML = "Steps: "+ steps;              
+        break;                            
 
-document.getElementById("r1c4").onclick = function () {
-   alert(w10);
-}
+        default:
+    }
 
-
-document.getElementById("r2c0").onclick = function () {
-   alert(w11);
-}
-
-document.getElementById("r2c1").onclick = function () {
-   alert(w12);
-}
-
-document.getElementById("r2c2").onclick = function () {
-   alert(w13);
 }
